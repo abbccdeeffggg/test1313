@@ -1,0 +1,333 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private household account profile for AA+ user.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the account owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name of the user.",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Verified email address of the user.",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last update timestamp."
+        }
+      },
+      "required": ["ownerId", "displayName", "createdAt", "updatedAt"]
+    },
+    "Device": {
+      "title": "Device",
+      "description": "Registered household battery-powered electronic device with manufacturer specs, usage pattern, and deterministic battery prediction.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the device owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "User-facing device name.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "manufacturer": {
+          "type": "string",
+          "description": "Device manufacturer name.",
+          "maxLength": 80
+        },
+        "modelNumber": {
+          "type": "string",
+          "description": "Manufacturer model identifier.",
+          "maxLength": 80
+        },
+        "category": {
+          "type": "string",
+          "description": "Device category (e.g., mouse, clock, lighting, lock, remote, sensor, other).",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "Local generated asset path or optional thumbnail identifier.",
+          "maxLength": 300
+        },
+        "batteryType": {
+          "type": "string",
+          "enum": ["AA", "AAA", "C", "D", "9V", "CR2032", "CR2025", "CR2016", "OTHER"],
+          "description": "Standard replaceable battery form factor."
+        },
+        "batteryChemistry": {
+          "type": "string",
+          "enum": ["alkaline", "lithium", "nimh", "zinc_carbon"],
+          "description": "Battery chemistry type."
+        },
+        "batteryCount": {
+          "type": "integer",
+          "description": "Number of battery cells required by the device."
+        },
+        "consumptionProfile": {
+          "type": "string",
+          "enum": ["constant_low", "active_duty", "event_peak"],
+          "description": "Power draw characteristic classification."
+        },
+        "standardLifeDays": {
+          "type": "number",
+          "description": "Manufacturer rated battery life in days."
+        },
+        "specSourceNote": {
+          "type": "string",
+          "description": "Source note or verification summary for manufacturer specs.",
+          "maxLength": 240
+        },
+        "dailyHours": {
+          "type": "number",
+          "description": "Average daily active hours."
+        },
+        "dailyCount": {
+          "type": "number",
+          "description": "Average daily activation events."
+        },
+        "intensity": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "Usage intensity level."
+        },
+        "unknownFields": {
+          "type": "array",
+          "description": "List of usage fields where AI recommendation was applied (max 6 items)."
+        },
+        "presetId": {
+          "type": "string",
+          "description": "Optional reference ID of applied usage preset.",
+          "maxLength": 128
+        },
+        "lastReplacedAt": {
+          "type": "string",
+          "format": "date",
+          "description": "ISO date string (YYYY-MM-DD) when batteries were last replaced.",
+          "minLength": 10,
+          "maxLength": 32
+        },
+        "calibrationFactor": {
+          "type": "number",
+          "description": "Empirical calibration multiplier learned from replacement logs."
+        },
+        "predictedTotalDays": {
+          "type": "number",
+          "description": "Deterministically calculated total battery lifespan in days."
+        },
+        "estimatedDailyMah": {
+          "type": "number",
+          "description": "Deterministically calculated average daily drain in mAh."
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["high", "medium", "low"],
+          "description": "Prediction confidence level based on spec and input completeness."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last update timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "name",
+        "category",
+        "batteryType",
+        "batteryChemistry",
+        "batteryCount",
+        "consumptionProfile",
+        "dailyHours",
+        "dailyCount",
+        "intensity",
+        "lastReplacedAt",
+        "calibrationFactor",
+        "predictedTotalDays",
+        "estimatedDailyMah",
+        "confidence",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "UsagePreset": {
+      "title": "UsagePreset",
+      "description": "Reusable custom usage pattern preset created by the user.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the preset owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Short preset label.",
+          "minLength": 1,
+          "maxLength": 60
+        },
+        "description": {
+          "type": "string",
+          "description": "Brief description of the preset pattern.",
+          "maxLength": 160
+        },
+        "categoryHint": {
+          "type": "string",
+          "description": "Suggested device category.",
+          "maxLength": 40
+        },
+        "dailyHours": {
+          "type": "number",
+          "description": "Preset average daily usage hours."
+        },
+        "dailyCount": {
+          "type": "number",
+          "description": "Preset average daily usage count."
+        },
+        "intensity": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "Preset usage intensity."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server last update timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "name",
+        "dailyHours",
+        "dailyCount",
+        "intensity",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ReplacementLog": {
+      "title": "ReplacementLog",
+      "description": "Historical battery replacement entry used to calibrate device power consumption.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the log owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "deviceId": {
+          "type": "string",
+          "description": "Parent device document ID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "replacedAt": {
+          "type": "string",
+          "format": "date",
+          "description": "Date batteries were replaced (YYYY-MM-DD).",
+          "minLength": 10,
+          "maxLength": 32
+        },
+        "chemistryUsed": {
+          "type": "string",
+          "enum": ["alkaline", "lithium", "nimh", "zinc_carbon"],
+          "description": "Chemistry of the newly installed batteries."
+        },
+        "actualDaysLasted": {
+          "type": "number",
+          "description": "Observed days elapsed since previous replacement."
+        },
+        "previousPredictedDays": {
+          "type": "number",
+          "description": "Predicted lifespan before this replacement."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional user note about battery performance.",
+          "maxLength": 200
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        }
+      },
+      "required": [
+        "ownerId",
+        "deviceId",
+        "replacedAt",
+        "chemistryUsed",
+        "actualDaysLasted",
+        "previousPredictedDays",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Private user account profile isolated per authenticated owner."
+    },
+    "/users/{userId}/devices/{deviceId}": {
+      "schema": {
+        "$ref": "#/entities/Device"
+      },
+      "description": "User's registered household battery-powered devices."
+    },
+    "/users/{userId}/presets/{presetId}": {
+      "schema": {
+        "$ref": "#/entities/UsagePreset"
+      },
+      "description": "User-saved reusable usage pattern presets."
+    },
+    "/users/{userId}/replacementLogs/{logId}": {
+      "schema": {
+        "$ref": "#/entities/ReplacementLog"
+      },
+      "description": "Historical battery replacement logs linked to a parent device."
+    }
+  }
+}

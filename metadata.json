@@ -1,0 +1,6 @@
+{
+  "name": "AA+",
+  "description": "가정 내 배터리 기반 전자제품의 소비량을 분석해 남은 사용 가능 기간을 일수로 예측하는 스마트 배터리 수명 관리 서비스",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

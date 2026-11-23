@@ -1,11 +1,40 @@
-<div align="center">
+# AA+ — Household Battery Life Manager
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+가정 내 건전지 기반 전자제품을 등록하고, AI가 식별한 제품·배터리 사양과 사용자의 실제 사용 패턴·교체 이력을 결합해 **남은 배터리 사용 가능 기간(일수)**을 예측하는 웹 서비스입니다.
 
-  <h1>Built with AI Studio</h2>
+## 주요 기능
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+- **내 제품 관리**: 일반 교체형 건전지 전체(`AA`, `AAA`, `C`, `D`, `9V`, `CR2032` 등 코인셀) 규격별 필터링 및 검색, 예상 잔여 일수 확인
+- **순차적 제품 등록 (2가지 진입 방식 → 3단계 플로우)**:
+  - **제품 검색**: 모델명·제조사 검색 시 Gemini + Google Search 그라운딩으로 공식 배터리 사양 수집
+  - **사진 등록**: 이미지 업로드 또는 카메라 촬영을 통한 멀티모달 제품 인식
+  - **혼합형 사용 패턴 입력**: 직접 입력, 항목별 `잘 모르겠음(AI 추천값 적용)`, 사용자 정의 프리셋 저장/불러오기 지원
+- **결정론적 배터리 수명 계산 및 교체 이력 보정**:
+  - AI는 사양 분석과 추천값 제안만 담당하고, 실제 수명 산출은 독립 계산 모듈(`src/utils/batteryEngine.ts`)이 수행
+  - 제품 상세 화면에서 `10일 이하` 교체 임박 안내 확인 및 교체 이력 기록 시 개인 보정 계수(`calibrationFactor`) 자동 학습
+- **대시보드**: 등록 제품 수, 평균 예상 잔여 수명, 10일 이하 교체 임박 제품 수, 규격별 건전지 분포 요약
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## 로컬 실행 방법
 
-</div>
+1. **의존성 설치**
+   ```bash
+   npm install
+   ```
+
+2. **환경 변수 설정**
+   `.env.example`을 참고하여 `.env` 파일을 생성하고 `GEMINI_API_KEY`를 입력합니다.
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **개발 서버 실행**
+   ```bash
+   npm run dev
+   ```
+   브라우저에서 `http://localhost:3000`으로 접속합니다.
+
+4. **프로덕션 빌드 및 실행**
+   ```bash
+   npm run build
+   npm start
+   ```

@@ -1,0 +1,216 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isOwner(userId) {
+      return isVerifiedUser() && request.auth.uid == userId;
+    }
+
+    function isValidBatteryType(t) {
+      return t in ['AA', 'AAA', 'C', 'D', '9V', 'CR2032', 'CR2025', 'CR2016', 'OTHER'];
+    }
+
+    function isValidChemistry(c) {
+      return c in ['alkaline', 'lithium', 'nimh', 'zinc_carbon'];
+    }
+
+    function isValidProfile(p) {
+      return p in ['constant_low', 'active_duty', 'event_peak'];
+    }
+
+    function isValidIntensity(i) {
+      return i in ['low', 'medium', 'high'];
+    }
+
+    function isValidConfidence(c) {
+      return c in ['high', 'medium', 'low'];
+    }
+
+    function isValidUserProfile(data, userId) {
+      return data.keys().hasAll(['ownerId', 'displayName', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['ownerId', 'displayName', 'email', 'createdAt', 'updatedAt'])
+        && data.ownerId == userId
+        && isValidId(data.ownerId)
+        && data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 100
+        && (!('email' in data) || (data.email is string && data.email.size() <= 200))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidDevice(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'name', 'category', 'batteryType', 'batteryChemistry',
+          'batteryCount', 'consumptionProfile', 'dailyHours', 'dailyCount',
+          'intensity', 'lastReplacedAt', 'calibrationFactor',
+          'predictedTotalDays', 'estimatedDailyMah', 'confidence',
+          'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'name', 'manufacturer', 'modelNumber', 'category', 'imageUrl',
+          'batteryType', 'batteryChemistry', 'batteryCount', 'consumptionProfile',
+          'standardLifeDays', 'specSourceNote', 'dailyHours', 'dailyCount',
+          'intensity', 'unknownFields', 'presetId', 'lastReplacedAt',
+          'calibrationFactor', 'predictedTotalDays', 'estimatedDailyMah',
+          'confidence', 'createdAt', 'updatedAt'
+        ])
+        && data.ownerId == userId
+        && isValidId(data.ownerId)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 80
+        && (!('manufacturer' in data) || (data.manufacturer is string && data.manufacturer.size() <= 80))
+        && (!('modelNumber' in data) || (data.modelNumber is string && data.modelNumber.size() <= 80))
+        && data.category is string && data.category.size() >= 1 && data.category.size() <= 40
+        && (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 300))
+        && isValidBatteryType(data.batteryType)
+        && isValidChemistry(data.batteryChemistry)
+        && data.batteryCount is int && data.batteryCount >= 1 && data.batteryCount <= 24
+        && isValidProfile(data.consumptionProfile)
+        && (!('standardLifeDays' in data) || (data.standardLifeDays is number && data.standardLifeDays >= 0 && data.standardLifeDays <= 10000))
+        && (!('specSourceNote' in data) || (data.specSourceNote is string && data.specSourceNote.size() <= 240))
+        && data.dailyHours is number && data.dailyHours >= 0 && data.dailyHours <= 24
+        && data.dailyCount is number && data.dailyCount >= 0 && data.dailyCount <= 10000
+        && isValidIntensity(data.intensity)
+        && (!('unknownFields' in data) || (
+          data.unknownFields is list
+          && data.unknownFields.size() <= 6
+          && (data.unknownFields.size() == 0 || data.unknownFields[0] is string)
+        ))
+        && (!('presetId' in data) || (data.presetId is string && data.presetId.size() <= 128))
+        && data.lastReplacedAt is string && data.lastReplacedAt.size() >= 10 && data.lastReplacedAt.size() <= 32
+        && data.calibrationFactor is number && data.calibrationFactor >= 0.1 && data.calibrationFactor <= 10.0
+        && data.predictedTotalDays is number && data.predictedTotalDays >= 0 && data.predictedTotalDays <= 10000
+        && data.estimatedDailyMah is number && data.estimatedDailyMah >= 0.01 && data.estimatedDailyMah <= 100000
+        && isValidConfidence(data.confidence)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidPreset(data, userId) {
+      return data.keys().hasAll(['ownerId', 'name', 'dailyHours', 'dailyCount', 'intensity', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['ownerId', 'name', 'description', 'categoryHint', 'dailyHours', 'dailyCount', 'intensity', 'createdAt', 'updatedAt'])
+        && data.ownerId == userId
+        && isValidId(data.ownerId)
+        && data.name is string && data.name.size() >= 1 && data.name.size() <= 60
+        && (!('description' in data) || (data.description is string && data.description.size() <= 160))
+        && (!('categoryHint' in data) || (data.categoryHint is string && data.categoryHint.size() <= 40))
+        && data.dailyHours is number && data.dailyHours >= 0 && data.dailyHours <= 24
+        && data.dailyCount is number && data.dailyCount >= 0 && data.dailyCount <= 10000
+        && isValidIntensity(data.intensity)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidReplacementLog(data, userId) {
+      return data.keys().hasAll([
+          'ownerId', 'deviceId', 'replacedAt', 'chemistryUsed',
+          'actualDaysLasted', 'previousPredictedDays', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerId', 'deviceId', 'replacedAt', 'chemistryUsed',
+          'actualDaysLasted', 'previousPredictedDays', 'notes', 'createdAt'
+        ])
+        && data.ownerId == userId
+        && isValidId(data.ownerId)
+        && isValidId(data.deviceId)
+        && data.replacedAt is string && data.replacedAt.size() >= 10 && data.replacedAt.size() <= 32
+        && isValidChemistry(data.chemistryUsed)
+        && data.actualDaysLasted is number && data.actualDaysLasted >= 0 && data.actualDaysLasted <= 10000
+        && data.previousPredictedDays is number && data.previousPredictedDays >= 0 && data.previousPredictedDays <= 10000
+        && (!('notes' in data) || (data.notes is string && data.notes.size() <= 200))
+        && data.createdAt is timestamp;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) && isValidId(userId);
+      allow create: if isOwner(userId) && isValidId(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isOwner(userId) && isValidId(userId)
+        && isValidUserProfile(incoming(), userId)
+        && incoming().ownerId == existing().ownerId
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email', 'updatedAt']);
+      allow delete: if false;
+
+      match /devices/{deviceId} {
+        allow get: if isOwner(userId) && isValidId(deviceId);
+        allow list: if isOwner(userId) && resource.data.ownerId == request.auth.uid;
+        allow create: if isOwner(userId) && isValidId(deviceId)
+          && isValidDevice(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isOwner(userId) && isValidId(deviceId)
+          && isValidDevice(incoming(), userId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && (
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'name', 'manufacturer', 'modelNumber', 'category', 'imageUrl',
+              'batteryType', 'batteryChemistry', 'batteryCount', 'consumptionProfile',
+              'standardLifeDays', 'specSourceNote', 'dailyHours', 'dailyCount',
+              'intensity', 'unknownFields', 'presetId', 'lastReplacedAt',
+              'calibrationFactor', 'predictedTotalDays', 'estimatedDailyMah',
+              'confidence', 'updatedAt'
+            ])
+          );
+        allow delete: if isOwner(userId) && isValidId(deviceId);
+      }
+
+      match /presets/{presetId} {
+        allow get: if isOwner(userId) && isValidId(presetId);
+        allow list: if isOwner(userId) && resource.data.ownerId == request.auth.uid;
+        allow create: if isOwner(userId) && isValidId(presetId)
+          && isValidPreset(incoming(), userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+        allow update: if isOwner(userId) && isValidId(presetId)
+          && isValidPreset(incoming(), userId)
+          && incoming().ownerId == existing().ownerId
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'name', 'description', 'categoryHint', 'dailyHours', 'dailyCount', 'intensity', 'updatedAt'
+          ]);
+        allow delete: if isOwner(userId) && isValidId(presetId);
+      }
+
+      match /replacementLogs/{logId} {
+        allow get: if isOwner(userId) && isValidId(logId);
+        allow list: if isOwner(userId) && resource.data.ownerId == request.auth.uid;
+        allow create: if isOwner(userId) && isValidId(logId)
+          && isValidReplacementLog(incoming(), userId)
+          && incoming().createdAt == request.time
+          && exists(/databases/$(database)/documents/users/$(userId)/devices/$(incoming().deviceId));
+        allow update: if false;
+        allow delete: if isOwner(userId) && isValidId(logId);
+      }
+    }
+  }
+}
